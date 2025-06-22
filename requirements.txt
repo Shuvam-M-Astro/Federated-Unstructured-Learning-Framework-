@@ -1,0 +1,48 @@
+# Core ML and Data Processing
+torch>=1.9.0
+torchvision>=0.10.0
+numpy>=1.21.0
+pandas>=1.3.0
+scikit-learn>=1.0.0
+pillow>=8.3.0
+
+# Privacy and Security
+cryptography>=3.4.0
+pysyft>=0.5.0
+opacus>=1.0.0
+
+# Web Framework and Communication
+fastapi>=0.68.0
+uvicorn>=0.15.0
+websockets>=10.0
+requests>=2.25.0
+aiofiles>=0.7.0
+
+# Data Processing and Visualization
+matplotlib>=3.4.0
+seaborn>=0.11.0
+plotly>=5.0.0
+dash>=2.0.0
+dash-bootstrap-components>=1.0.0
+
+# Utilities
+tqdm>=4.62.0
+pyyaml>=5.4.0
+python-dotenv>=0.19.0
+click>=8.0.0
+loguru>=0.5.0
+
+# Testing
+pytest>=6.2.0
+pytest-asyncio>=0.15.0
+pytest-cov>=2.12.0
+
+# Development
+black>=21.7.0
+flake8>=3.9.0
+mypy>=0.910
+
+# Optional: Advanced features
+transformers>=4.11.0
+datasets>=1.11.0
+accelerate>=0.5.0 

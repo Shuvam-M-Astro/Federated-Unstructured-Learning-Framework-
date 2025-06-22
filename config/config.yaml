@@ -1,0 +1,65 @@
+# Federated Learning Configuration
+
+# Server Configuration
+server:
+  host: "localhost"
+  port: 8000
+  max_clients: 100
+  timeout: 300  # seconds
+
+# Training Configuration
+training:
+  epochs: 10
+  batch_size: 32
+  learning_rate: 0.001
+  momentum: 0.9
+  weight_decay: 0.0001
+  
+# Privacy Configuration
+privacy:
+  differential_privacy: true
+  epsilon: 0.5
+  delta: 1e-5
+  noise_multiplier: 1.1
+  max_grad_norm: 1.0
+  
+# Communication Configuration
+communication:
+  compression: true
+  encryption: true
+  retry_attempts: 3
+  retry_delay: 5  # seconds
+  
+# Model Configuration
+model:
+  type: "cnn"  # cnn, rnn, transformer, custom
+  input_size: [3, 224, 224]  # for images
+  num_classes: 10
+  hidden_size: 128
+  
+# Data Processing Configuration
+data_processing:
+  supported_formats:
+    - "text"
+    - "image"
+    - "tabular"
+    - "mixed"
+  max_file_size: 100  # MB
+  preprocessing:
+    normalize: true
+    augment: true
+    resize: [224, 224]
+    
+# Monitoring Configuration
+monitoring:
+  log_level: "INFO"
+  save_metrics: true
+  dashboard_port: 8050
+  update_interval: 10  # seconds
+  
+# Security Configuration
+security:
+  ssl_enabled: false
+  certificate_path: ""
+  private_key_path: ""
+  allowed_origins: ["*"] 
