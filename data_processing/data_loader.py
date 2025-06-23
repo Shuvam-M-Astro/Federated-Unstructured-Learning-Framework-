@@ -17,6 +17,13 @@ from torch.utils.data import Dataset, DataLoader
 from torchvision import transforms
 import cv2
 
+from utils.constants import (
+    SUPPORTED_TEXT_EXTENSIONS, 
+    SUPPORTED_IMAGE_EXTENSIONS, 
+    SUPPORTED_TABULAR_EXTENSIONS,
+    DEFAULT_IMAGE_SIZE
+)
+
 logger = logging.getLogger(__name__)
 
 
@@ -58,10 +65,8 @@ class UnstructuredDataset(Dataset):
     
     def _load_text_data(self):
         """Load text data from files."""
-        text_extensions = {'.txt', '.md', '.json', '.csv'}
-        
         for file_path in self.data_path.rglob('*'):
-            if file_path.suffix.lower() in text_extensions:
+            if file_path.suffix.lower() in SUPPORTED_TEXT_EXTENSIONS:
                 try:
                     with open(file_path, 'r', encoding='utf-8') as f:
                         content = f.read()
@@ -81,10 +86,8 @@ class UnstructuredDataset(Dataset):
     
     def _load_image_data(self):
         """Load image data from files."""
-        image_extensions = {'.jpg', '.jpeg', '.png', '.bmp', '.tiff', '.gif'}
-        
         for file_path in self.data_path.rglob('*'):
-            if file_path.suffix.lower() in image_extensions:
+            if file_path.suffix.lower() in SUPPORTED_IMAGE_EXTENSIONS:
                 try:
                     image = Image.open(file_path).convert('RGB')
                     
@@ -103,10 +106,8 @@ class UnstructuredDataset(Dataset):
     
     def _load_tabular_data(self):
         """Load tabular data from files."""
-        tabular_extensions = {'.csv', '.xlsx', '.xls', '.parquet', '.json'}
-        
         for file_path in self.data_path.rglob('*'):
-            if file_path.suffix.lower() in tabular_extensions:
+            if file_path.suffix.lower() in SUPPORTED_TABULAR_EXTENSIONS:
                 try:
                     if file_path.suffix.lower() == '.csv':
                         df = pd.read_csv(file_path)

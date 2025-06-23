@@ -8,6 +8,8 @@ from typing import Dict, Any, Optional
 from pathlib import Path
 import logging
 
+from utils.constants import ERROR_MESSAGES
+
 logger = logging.getLogger(__name__)
 
 
@@ -33,7 +35,7 @@ class ConfigLoader:
             Configuration dictionary.
         """
         if not self.config_path.exists():
-            raise FileNotFoundError(f"Configuration file not found: {self.config_path}")
+            raise FileNotFoundError(ERROR_MESSAGES['config_not_found'].format(self.config_path))
         
         try:
             with open(self.config_path, 'r') as file:
@@ -41,7 +43,7 @@ class ConfigLoader:
             logger.info(f"Configuration loaded from {self.config_path}")
             return config
         except yaml.YAMLError as e:
-            raise ValueError(f"Invalid YAML configuration: {e}")
+            raise ValueError(ERROR_MESSAGES['invalid_yaml'].format(str(e)))
     
     def get(self, key: str, default: Any = None) -> Any:
         """Get configuration value by key.
