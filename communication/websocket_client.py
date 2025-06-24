@@ -7,7 +7,7 @@ import json
 import logging
 import pickle
 import time
-from typing import Dict, Any, Optional, Callable
+from typing import Dict, Any, Optional, Callable, List
 import websockets
 import torch
 import numpy as np
@@ -59,9 +59,10 @@ class FederatedWebSocketClient:
             True if connection successful
         """
         try:
+            # Increase max message size to handle large model updates
             self.websocket = await websockets.connect(
                 self.server_url,
-                extra_headers={'Client-ID': self.client_id}
+                max_size=100 * 1024 * 1024  # 100MB limit
             )
             self.connected = True
             self.reconnect_attempts = 0
