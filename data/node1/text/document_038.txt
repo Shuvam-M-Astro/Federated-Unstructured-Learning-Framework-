@@ -1,0 +1,1 @@
+Zero-knowledge proofs verify computations without revealing data. Differential privacy adds noise to protect individual records. Additional information about privacy. Machine learning models can be trained collaboratively. Additional information about learning. Federated learning allows training without data sharing. Additional information about security. ouddjn msxvl xpcmbsiv

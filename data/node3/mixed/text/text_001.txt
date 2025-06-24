@@ -1,0 +1,1 @@
+Sample text content for mixed data file 1 from node 3.

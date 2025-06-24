@@ -1,0 +1,1 @@
+Federated learning allows training without data sharing. Additional information about security. Homomorphic encryption allows computation on encrypted data. Additional information about data. Distributed training enables large-scale model development. Additional information about security. Multi-party computation enables secure computation. zcceu qxwkmvd cmuo

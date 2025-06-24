@@ -1,0 +1,1 @@
+This is a sample document for federated learning. Additional information about learning. Federated learning allows training without data sharing. Additional information about data. Multi-party computation enables secure computation. Differential privacy adds noise to protect individual records. Additional information about data. waxzt gsnyryp fisfyc

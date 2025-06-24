@@ -1,0 +1,1 @@
+Differential privacy adds noise to protect individual records. Additional information about learning. Zero-knowledge proofs verify computations without revealing data. Zero-knowledge proofs verify computations without revealing data. Privacy-preserving techniques protect sensitive data. jdpfyh bgailp bcii htramx

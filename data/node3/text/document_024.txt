@@ -1,0 +1,1 @@
+Federated learning allows training without data sharing. Additional information about privacy. Secure aggregation combines model updates safely. Homomorphic encryption allows computation on encrypted data. Additional information about security. Machine learning models can be trained collaboratively. vfiaqal rfaloj kwgvjyf

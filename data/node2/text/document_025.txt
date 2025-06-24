@@ -1,0 +1,1 @@
+Differential privacy adds noise to protect individual records. Secure aggregation combines model updates safely. Homomorphic encryption allows computation on encrypted data. Homomorphic encryption allows computation on encrypted data. fqxbzhfr rexxjq odbokrtd jsfk

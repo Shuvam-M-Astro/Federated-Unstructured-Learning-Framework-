@@ -1,0 +1,16 @@
+{
+  "generated_at": "2025-06-24T05:50:48.895095",
+  "num_nodes": 3,
+  "data_types": [
+    "text",
+    "image",
+    "tabular",
+    "mixed"
+  ],
+  "structure": {
+    "text": "50 files per node",
+    "image": "30 files per node",
+    "tabular": "500 rows per node",
+    "mixed": "10 files per node"
+  }
+}

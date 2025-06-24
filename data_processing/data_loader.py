@@ -124,10 +124,14 @@ class UnstructuredDataset(Dataset):
                         labels = df[self.target_column]
                     else:
                         features = df
-                        labels = [0] * len(df)  # Default label
+                        labels = pd.Series([0] * len(df))  # Default label
                     
                     self.data.extend(features.values.tolist())
-                    self.labels.extend(labels.tolist())
+                    # Handle labels properly - convert to list if it's a pandas Series
+                    if hasattr(labels, 'tolist'):
+                        self.labels.extend(labels.tolist())
+                    else:
+                        self.labels.extend(list(labels))
                     
                     for i in range(len(df)):
                         self.metadata.append({

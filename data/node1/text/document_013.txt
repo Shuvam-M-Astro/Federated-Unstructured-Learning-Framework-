@@ -1,0 +1,1 @@
+Federated learning allows training without data sharing. Additional information about learning. Homomorphic encryption allows computation on encrypted data. Zero-knowledge proofs verify computations without revealing data. This is a sample document for federated learning. qinad eersl onkzi sfezyxmk
