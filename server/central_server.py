@@ -76,8 +76,13 @@ class FederatedServer:
             self.model_config
         )
         
-        # Start WebSocket server
-        async with serve(self._handle_client, self.host, self.port):
+        # Start WebSocket server with increased message size limit
+        async with serve(
+            self._handle_client, 
+            self.host, 
+            self.port,
+            max_size=100 * 1024 * 1024  # 100MB limit
+        ):
             logger.info(f"Server listening on ws://{self.host}:{self.port}")
             
             # Start background tasks
@@ -326,13 +331,24 @@ class FederatedServer:
         if self.global_model is None:
             return
         
-        # Convert model to serializable format
+        # Convert model to serializable format with compression
         model_state = {}
         for param_name, param_tensor in self.global_model.state_dict().items():
+            # Convert to numpy and compress by keeping only significant values
+            tensor_np = param_tensor.detach().cpu().numpy()
+            
+            # Simple compression: keep only top 10% of values by magnitude
+            flat_tensor = tensor_np.flatten()
+            threshold = np.percentile(np.abs(flat_tensor), 90)  # Keep top 10%
+            mask = np.abs(flat_tensor) >= threshold
+            compressed_tensor = flat_tensor * mask
+            
             model_state[param_name] = {
-                'data': param_tensor.detach().cpu().numpy().tolist(),
-                'shape': list(param_tensor.shape),
-                'dtype': str(param_tensor.dtype)
+                'data': compressed_tensor.tolist(),
+                'shape': list(tensor_np.shape),
+                'dtype': str(param_tensor.dtype),
+                'compressed': True,
+                'threshold': float(threshold)
             }
         
         await self._send_to_client(client_id, 'model_request', {
@@ -501,7 +517,7 @@ class FederatedServer:
 
 
 async def main():
-    """Main function to start the federated server."""
+    print(">>> main() in central_server.py is running")
     # Setup logging
     logging.basicConfig(
         level=logging.INFO,
@@ -521,4 +537,8 @@ async def main():
 
 
 if __name__ == "__main__":
-    asyncio.run(main()) 
+    import asyncio
+    try:
+        asyncio.run(main())
+    except Exception as e:
+        print(f"Server crashed with exception: {e}") 
