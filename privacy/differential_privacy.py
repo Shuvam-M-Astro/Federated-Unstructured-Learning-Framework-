@@ -34,7 +34,9 @@ class DifferentialPrivacy:
         self.privacy_accountant = None
         
     def setup_privacy_engine(self, model: nn.Module, sample_rate: float, 
-                           epochs: int, target_epsilon: Optional[float] = None) -> None:
+                           epochs: int, target_epsilon: Optional[float] = None,
+                           optimizer: Optional[torch.optim.Optimizer] = None,
+                           data_loader: Optional[Any] = None) -> None:
         """Setup privacy engine for the model.
         
         Args:
@@ -42,34 +44,50 @@ class DifferentialPrivacy:
             sample_rate: Sampling rate for privacy calculation
             epochs: Number of training epochs
             target_epsilon: Target privacy budget (if None, use config epsilon)
+            optimizer: PyTorch optimizer (required for Opacus)
+            data_loader: Data loader (required for Opacus)
         """
         if not self.enabled:
             logger.info("Differential privacy disabled")
             return
         
         try:
+            # Ensure all parameters are the correct types
+            sample_rate = float(sample_rate)
+            epochs = int(epochs)
+            
             self.privacy_engine = PrivacyEngine()
             
             # Calculate noise multiplier to achieve target epsilon
             if target_epsilon is not None:
-                self.epsilon = target_epsilon
+                self.epsilon = float(target_epsilon)
             
             # Calculate noise multiplier based on privacy budget
-            steps = int(epochs / sample_rate)
+            if sample_rate > 0:
+                steps = int(epochs / sample_rate)
+            else:
+                steps = epochs  # Fallback if sample_rate is 0
+            
             self.noise_multiplier = self._calculate_noise_multiplier(
-                target_epsilon=self.epsilon,
-                target_delta=self.delta,
+                target_epsilon=float(self.epsilon),
+                target_delta=float(self.delta),
                 sample_rate=sample_rate,
                 steps=steps
             )
             
             # Make model compatible with Opacus
-            self.privacy_engine.make_private(
-                module=model,
-                sample_rate=sample_rate,
-                noise_multiplier=self.noise_multiplier,
-                max_grad_norm=self.max_grad_norm,
-            )
+            if optimizer is not None and data_loader is not None:
+                self.privacy_engine.make_private(
+                    module=model,
+                    optimizer=optimizer,
+                    data_loader=data_loader,
+                    noise_multiplier=self.noise_multiplier,
+                    max_grad_norm=self.max_grad_norm,
+                )
+            else:
+                logger.warning("Optimizer or data_loader not provided, skipping Opacus setup")
+                self.enabled = False
+                return
             
             logger.info(f"Privacy engine setup complete. "
                        f"Target epsilon: {self.epsilon}, "
@@ -385,15 +403,18 @@ class PrivacyManager:
         self.secure_agg = SecureAggregation(config)
         
     def setup_model_privacy(self, model: nn.Module, sample_rate: float, 
-                          epochs: int) -> None:
+                          epochs: int, optimizer: Optional[torch.optim.Optimizer] = None,
+                          data_loader: Optional[Any] = None) -> None:
         """Setup privacy mechanisms for a model.
         
         Args:
             model: PyTorch model
             sample_rate: Sampling rate
             epochs: Number of training epochs
+            optimizer: PyTorch optimizer (required for Opacus)
+            data_loader: Data loader (required for Opacus)
         """
-        self.dp.setup_privacy_engine(model, sample_rate, epochs)
+        self.dp.setup_privacy_engine(model, sample_rate, epochs, optimizer=optimizer, data_loader=data_loader)
     
     def process_gradients(self, gradients: List[torch.Tensor], 
                          sensitivity: float = 1.0) -> List[torch.Tensor]:
