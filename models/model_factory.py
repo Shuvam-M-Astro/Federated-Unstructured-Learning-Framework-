@@ -40,9 +40,10 @@ class CNNModel(nn.Module):
         self.fc1 = nn.Linear(conv_output_size, hidden_size)
         self.fc2 = nn.Linear(hidden_size, num_classes)
         
-        self.batch_norm1 = nn.BatchNorm2d(32)
-        self.batch_norm2 = nn.BatchNorm2d(64)
-        self.batch_norm3 = nn.BatchNorm2d(128)
+        # Use GroupNorm instead of BatchNorm for privacy compatibility
+        self.norm1 = nn.GroupNorm(8, 32)  # 8 groups for 32 channels
+        self.norm2 = nn.GroupNorm(8, 64)  # 8 groups for 64 channels
+        self.norm3 = nn.GroupNorm(16, 128)  # 16 groups for 128 channels
     
     def forward(self, x: torch.Tensor) -> torch.Tensor:
         """Forward pass.
@@ -54,9 +55,9 @@ class CNNModel(nn.Module):
             Output tensor of shape (batch_size, num_classes)
         """
         # Convolutional layers
-        x = self.pool(F.relu(self.batch_norm1(self.conv1(x))))
-        x = self.pool(F.relu(self.batch_norm2(self.conv2(x))))
-        x = self.pool(F.relu(self.batch_norm3(self.conv3(x))))
+        x = self.pool(F.relu(self.norm1(self.conv1(x))))
+        x = self.pool(F.relu(self.norm2(self.conv2(x))))
+        x = self.pool(F.relu(self.norm3(self.conv3(x))))
         
         # Flatten
         x = x.view(x.size(0), -1)
