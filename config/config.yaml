@@ -17,7 +17,7 @@ training:
   
 # Privacy Configuration
 privacy:
-  differential_privacy: true
+  differential_privacy: false  # Temporarily disabled for testing
   epsilon: 0.5
   delta: 1e-5
   noise_multiplier: 1.1
