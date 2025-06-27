@@ -36,8 +36,18 @@ class FederatedClient:
             data_type: Type of data ('text', 'image', 'tabular', 'mixed')
             server_url: WebSocket server URL
         """
-        self.client_id = client_id
-        self.data_path = data_path
+        # Input validation
+        if not client_id or not client_id.strip():
+            raise ValueError("Client ID cannot be empty")
+        if not data_path or not data_path.strip():
+            raise ValueError("Data path cannot be empty")
+        if data_type not in ['text', 'image', 'tabular', 'mixed']:
+            raise ValueError(f"Unsupported data type: {data_type}")
+        if not server_url or not server_url.startswith(('ws://', 'wss://')):
+            raise ValueError("Invalid server URL format")
+        
+        self.client_id = client_id.strip()
+        self.data_path = data_path.strip()
         self.data_type = data_type
         self.server_url = server_url
         
