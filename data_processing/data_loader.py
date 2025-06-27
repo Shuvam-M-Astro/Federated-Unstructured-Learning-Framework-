@@ -297,33 +297,66 @@ class DataProcessor:
         return info
     
     def validate_data(self, data_path: str, data_type: str) -> bool:
-        """Validate data integrity and format.
+        """Validate data at the given path.
         
         Args:
-            data_path: Path to data
-            data_type: Type of data
+            data_path: Path to data directory
+            data_type: Type of data ('text', 'image', 'tabular', 'mixed')
             
         Returns:
             True if data is valid
         """
-        try:
-            dataset = UnstructuredDataset(data_path, data_type)
-            
-            if len(dataset) == 0:
-                logger.error("Dataset is empty")
-                return False
-            
-            # Check file sizes
-            for metadata in dataset.metadata:
-                if 'file_size' in metadata and metadata['file_size'] > self.max_file_size:
-                    logger.warning(f"File {metadata['file_path']} exceeds size limit")
-            
-            logger.info(f"Data validation passed: {len(dataset)} samples")
-            return True
-            
-        except Exception as e:
-            logger.error(f"Data validation failed: {e}")
+        if not os.path.exists(data_path):
+            logger.error(f"Data path does not exist: {data_path}")
             return False
+        
+        if data_type not in ['text', 'image', 'tabular', 'mixed']:
+            logger.error(f"Unsupported data type: {data_type}")
+            return False
+        
+        # Check for minimum data requirements
+        if data_type == 'text':
+            return self._validate_text_data(data_path)
+        elif data_type == 'image':
+            return self._validate_image_data(data_path)
+        elif data_type == 'tabular':
+            return self._validate_tabular_data(data_path)
+        elif data_type == 'mixed':
+            return self._validate_mixed_data(data_path)
+        
+        return False
+    
+    def _validate_text_data(self, data_path: str) -> bool:
+        """Validate text data files."""
+        text_files = self._get_files_by_extension(data_path, SUPPORTED_TEXT_EXTENSIONS)
+        if len(text_files) < 10:  # Minimum 10 text files
+            logger.warning(f"Insufficient text files: {len(text_files)}")
+            return False
+        return True
+    
+    def _validate_image_data(self, data_path: str) -> bool:
+        """Validate image data files."""
+        image_files = self._get_files_by_extension(data_path, SUPPORTED_IMAGE_EXTENSIONS)
+        if len(image_files) < 10:  # Minimum 10 image files
+            logger.warning(f"Insufficient image files: {len(image_files)}")
+            return False
+        return True
+    
+    def _validate_tabular_data(self, data_path: str) -> bool:
+        """Validate tabular data files."""
+        tabular_files = self._get_files_by_extension(data_path, SUPPORTED_TABULAR_EXTENSIONS)
+        if len(tabular_files) == 0:
+            logger.error("No tabular data files found")
+            return False
+        return True
+    
+    def _validate_mixed_data(self, data_path: str) -> bool:
+        """Validate mixed data structure."""
+        mixed_dir = os.path.join(data_path, 'mixed')
+        if not os.path.exists(mixed_dir):
+            logger.error("Mixed data directory not found")
+            return False
+        return True
 
 
 class TextProcessor:
