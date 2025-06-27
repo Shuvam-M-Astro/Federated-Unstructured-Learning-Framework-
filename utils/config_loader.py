@@ -121,6 +121,10 @@ class ConfigLoader:
         server_config = self.config['server']
         if not isinstance(server_config.get('port'), int):
             raise ValueError("Server port must be an integer")
+        if server_config.get('port', 0) <= 0 or server_config.get('port', 0) > 65535:
+            raise ValueError("Server port must be between 1 and 65535")
+        if server_config.get('max_clients', 0) <= 0:
+            raise ValueError("Max clients must be positive")
         
         # Validate training config
         training_config = self.config['training']
@@ -128,11 +132,15 @@ class ConfigLoader:
             raise ValueError("Training epochs must be positive")
         if training_config.get('batch_size', 0) <= 0:
             raise ValueError("Batch size must be positive")
+        if training_config.get('learning_rate', 0) <= 0:
+            raise ValueError("Learning rate must be positive")
         
         # Validate privacy config
         privacy_config = self.config['privacy']
         if privacy_config.get('epsilon', 0) <= 0:
             raise ValueError("Privacy epsilon must be positive")
+        if privacy_config.get('delta', 0) <= 0 or privacy_config.get('delta', 0) >= 1:
+            raise ValueError("Privacy delta must be between 0 and 1")
         
         logger.info("Configuration validation passed")
         return True
