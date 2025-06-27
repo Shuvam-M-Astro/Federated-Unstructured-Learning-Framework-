@@ -39,9 +39,19 @@ class TestFederatedServer:
         """Start the test server."""
         logger.info(f"Starting test server on {self.host}:{self.port}")
         
-        async with websockets.serve(self._handle_client, self.host, self.port):
-            logger.info(f"Test server listening on ws://{self.host}:{self.port}")
-            await asyncio.Future()  # Run forever
+        try:
+            async with websockets.serve(self._handle_client, self.host, self.port):
+                logger.info(f"Test server listening on ws://{self.host}:{self.port}")
+                await asyncio.Future()  # Run forever
+        except OSError as e:
+            if e.errno == 48:  # Address already in use
+                logger.error(f"Port {self.port} is already in use. Please use a different port.")
+            else:
+                logger.error(f"Failed to start test server: {e}")
+            raise
+        except Exception as e:
+            logger.error(f"Unexpected error starting test server: {e}")
+            raise
     
     async def _handle_client(self, websocket, path):
         """Handle test client connection."""
