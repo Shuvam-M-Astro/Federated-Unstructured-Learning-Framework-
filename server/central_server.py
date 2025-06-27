@@ -11,6 +11,7 @@ import websockets
 from websockets.server import serve
 import torch
 import numpy as np
+from collections import defaultdict, deque
 
 from utils.config_loader import config
 from models.model_factory import ModelFactory
@@ -35,6 +36,11 @@ class FederatedServer:
         self.clients: Dict[str, websockets.WebSocketServerProtocol] = {}
         self.client_info: Dict[str, Dict[str, Any]] = {}
         self.model_updates: Dict[str, Dict[str, torch.Tensor]] = {}
+        
+        # Rate limiting
+        self.client_requests: Dict[str, deque] = defaultdict(lambda: deque(maxlen=100))
+        self.rate_limit_window = 60  # 1 minute
+        self.max_requests_per_window = 50
         
         # Load configuration
         self.server_config = config.get_server_config()
@@ -141,6 +147,15 @@ class FederatedServer:
             message: Raw message string
         """
         try:
+            # Check rate limiting
+            if not self._check_rate_limit(client_id):
+                logger.warning(f"Rate limit exceeded for client {client_id}")
+                await self._send_to_client(client_id, 'error', {
+                    'error': 'Rate limit exceeded',
+                    'retry_after': self.rate_limit_window
+                })
+                return
+            
             parsed_message = json.loads(message)
             message_type = parsed_message.get('type')
             data = parsed_message.get('data', {})
@@ -160,6 +175,30 @@ class FederatedServer:
             logger.error(f"Failed to parse message from {client_id}: {e}")
         except Exception as e:
             logger.error(f"Error handling message from {client_id}: {e}")
+    
+    def _check_rate_limit(self, client_id: str) -> bool:
+        """Check if client has exceeded rate limit.
+        
+        Args:
+            client_id: Client identifier
+            
+        Returns:
+            True if within rate limit, False otherwise
+        """
+        current_time = time.time()
+        client_queue = self.client_requests[client_id]
+        
+        # Remove old requests outside the window
+        while client_queue and current_time - client_queue[0] > self.rate_limit_window:
+            client_queue.popleft()
+        
+        # Check if adding this request would exceed limit
+        if len(client_queue) >= self.max_requests_per_window:
+            return False
+        
+        # Add current request
+        client_queue.append(current_time)
+        return True
     
     async def _handle_register(self, client_id: str, data: Dict[str, Any]):
         """Handle client registration.
@@ -498,22 +537,71 @@ class FederatedServer:
                 await asyncio.sleep(30)
     
     def get_server_status(self) -> Dict[str, Any]:
-        """Get current server status.
+        """Get server status information.
         
         Returns:
-            Dictionary with server status
+            Server status dictionary
         """
+        active_clients = len([c for c in self.client_info.values() if c.get('status') == 'ready'])
+        total_clients = len(self.clients)
+        
         return {
-            'host': self.host,
-            'port': self.port,
-            'connected_clients': len(self.clients),
-            'total_clients': len(self.client_info),
+            'status': 'running' if self.training_active else 'idle',
             'current_round': self.current_round,
+            'max_rounds': self.max_rounds,
+            'active_clients': active_clients,
+            'total_clients': total_clients,
+            'min_clients': self.min_clients,
             'training_active': self.training_active,
-            'model_updates_pending': len(self.model_updates),
-            'privacy_status': self.privacy_manager.get_privacy_status(),
-            'metrics': self.metrics_collector.get_summary()
+            'uptime': time.time() - getattr(self, '_start_time', time.time()),
+            'memory_usage': self._get_memory_usage(),
+            'model_updates_pending': len(self.model_updates)
         }
+    
+    def _get_memory_usage(self) -> Dict[str, float]:
+        """Get current memory usage statistics.
+        
+        Returns:
+            Memory usage information
+        """
+        try:
+            import psutil
+            process = psutil.Process()
+            memory_info = process.memory_info()
+            return {
+                'rss_mb': memory_info.rss / 1024 / 1024,
+                'vms_mb': memory_info.vms / 1024 / 1024,
+                'percent': process.memory_percent()
+            }
+        except ImportError:
+            return {'error': 'psutil not available'}
+    
+    def health_check(self) -> Dict[str, Any]:
+        """Perform health check on the server.
+        
+        Returns:
+            Health check results
+        """
+        health_status = {
+            'status': 'healthy',
+            'timestamp': time.time(),
+            'checks': {}
+        }
+        
+        # Check client connections
+        active_clients = len([c for c in self.client_info.values() if c.get('status') == 'ready'])
+        if active_clients < self.min_clients:
+            health_status['status'] = 'degraded'
+            health_status['checks']['clients'] = f'Insufficient clients: {active_clients}/{self.min_clients}'
+        
+        # Check memory usage
+        memory_usage = self._get_memory_usage()
+        if isinstance(memory_usage, dict) and 'percent' in memory_usage:
+            if memory_usage['percent'] > 85:
+                health_status['status'] = 'degraded'
+                health_status['checks']['memory'] = f'High memory usage: {memory_usage["percent"]:.1f}%'
+        
+        return health_status
 
 
 async def main():
