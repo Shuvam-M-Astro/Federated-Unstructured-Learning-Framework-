@@ -99,6 +99,14 @@ DEFAULT_GRADIENT_ACCUMULATION_STEPS = 1
 DEFAULT_GRADIENT_CLIPPING = True
 DEFAULT_WEIGHT_INITIALIZATION = "xavier"  # xavier, he, normal, uniform
 
+# Memory management
+MAX_MEMORY_USAGE_PERCENT = 85
+MAX_GPU_MEMORY_USAGE_PERCENT = 90
+MEMORY_CLEANUP_INTERVAL = 300  # seconds
+MAX_MODEL_SIZE_MB = 500
+MAX_BATCH_SIZE_MEMORY = 64
+MEMORY_MONITORING_ENABLED = True
+
 # Monitoring and logging
 DEFAULT_LOG_LEVEL = "INFO"
 DEFAULT_LOG_FORMAT = "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
@@ -106,6 +114,13 @@ DEFAULT_LOG_FILE = "federated_learning.log"
 DEFAULT_METRICS_INTERVAL = 10  # seconds
 DEFAULT_CHECKPOINT_INTERVAL = 5  # rounds
 DEFAULT_EVALUATION_INTERVAL = 1  # rounds
+
+# Structured logging
+LOG_STRUCTURED_FORMAT = "%(asctime)s - %(name)s - %(levelname)s - %(funcName)s:%(lineno)d - %(message)s"
+LOG_JSON_FORMAT = '{"timestamp": "%(asctime)s", "level": "%(levelname)s", "logger": "%(name)s", "message": "%(message)s"}'
+LOG_ROTATION_SIZE = "100MB"
+LOG_RETENTION_DAYS = 30
+LOG_COMPRESSION = True
 
 # Storage and caching
 DEFAULT_CACHE_SIZE = 1000
