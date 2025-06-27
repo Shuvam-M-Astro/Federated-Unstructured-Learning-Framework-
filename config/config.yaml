@@ -62,4 +62,11 @@ security:
   ssl_enabled: false
   certificate_path: ""
   private_key_path: ""
-  allowed_origins: ["*"] 
+  allowed_origins: ["*"]
+  max_request_size: 100  # MB
+  session_timeout: 3600  # seconds
+  enable_cors: true
+  cors_origins: ["*"]
+  enable_rate_limiting: true
+  rate_limit_requests: 50
+  rate_limit_window: 60  # seconds 
