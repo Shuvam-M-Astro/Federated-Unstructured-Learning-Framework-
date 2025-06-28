@@ -63,6 +63,9 @@ class FederatedServer:
         self.round_start_time = None
         self.round_timeout = self.server_config.get('timeout', 300)
         
+        # Server start time for uptime tracking
+        self.start_time = time.time()
+        
         # Message handlers
         self.message_handlers = {
             'register': self._handle_register,
@@ -553,7 +556,7 @@ class FederatedServer:
             'total_clients': total_clients,
             'min_clients': self.min_clients,
             'training_active': self.training_active,
-            'uptime': time.time() - getattr(self, '_start_time', time.time()),
+            'uptime': time.time() - self.start_time,
             'memory_usage': self._get_memory_usage(),
             'model_updates_pending': len(self.model_updates)
         }
