@@ -9,6 +9,34 @@ opencv-python>=4.5.0,<5.0.0
 openpyxl>=3.0.0,<4.0.0
 xlrd>=2.0.0,<3.0.0
 
+# PDF and Document Processing
+PyPDF2>=3.0.0,<4.0.0
+pdfplumber>=0.7.0,<1.0.0
+pdf2image>=1.16.0,<2.0.0
+pytesseract>=0.3.10,<1.0.0
+python-docx>=0.8.11,<1.0.0
+python-pptx>=0.6.21,<1.0.0
+tabula-py>=2.5.0,<3.0.0
+camelot-py[cv]>=0.10.0,<1.0.0
+reportlab>=3.6.0,<4.0.0
+
+# Web Scraping and HTML Processing
+requests>=2.25.0,<3.0.0
+beautifulsoup4>=4.10.0,<5.0.0
+lxml>=4.6.0,<5.0.0
+selenium>=4.0.0,<5.0.0
+scrapy>=2.5.0,<3.0.0
+newspaper3k>=0.2.8,<1.0.0
+trafilatura>=5.0.0,<6.0.0
+readability-lxml>=0.8.1,<1.0.0
+jinja2>=3.0.0,<4.0.0
+
+# OCR and Image Processing
+pytesseract>=0.3.10,<1.0.0
+easyocr>=1.6.0,<2.0.0
+paddleocr>=2.6.0,<3.0.0
+tesseract-ocr>=0.1.0,<1.0.0
+
 # Privacy and Security
 cryptography>=3.4.0,<42.0.0
 pysyft>=0.5.0,<0.6.0
@@ -18,7 +46,6 @@ opacus>=1.0.0,<2.0.0
 fastapi>=0.68.0
 uvicorn>=0.15.0
 websockets>=10.0
-requests>=2.25.0
 aiofiles>=0.7.0
 
 # Data Processing and Visualization
