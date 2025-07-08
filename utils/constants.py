@@ -80,6 +80,47 @@ SUPPORTED_TEXT_EXTENSIONS: Set[str] = {'.txt', '.md', '.json', '.csv', '.xml', '
 SUPPORTED_IMAGE_EXTENSIONS: Set[str] = {'.jpg', '.jpeg', '.png', '.bmp', '.tiff', '.gif', '.webp', '.svg'}
 SUPPORTED_TABULAR_EXTENSIONS: Set[str] = {'.csv', '.xlsx', '.xls', '.parquet', '.json', '.h5', '.hdf5'}
 SUPPORTED_AUDIO_EXTENSIONS: Set[str] = {'.wav', '.mp3', '.flac', '.aac', '.ogg', '.m4a'}
+SUPPORTED_PDF_EXTENSIONS: Set[str] = {'.pdf'}
+SUPPORTED_WEB_EXTENSIONS: Set[str] = {'.html', '.htm', '.xml', '.json', '.csv'}
+SUPPORTED_DOCUMENT_EXTENSIONS: Set[str] = {'.pdf', '.doc', '.docx', '.txt', '.md', '.html', '.htm'}
+
+# PDF Processing
+PDF_EXTRACTION_METHODS = ['text', 'images', 'tables', 'metadata', 'all']
+PDF_MAX_PAGES = 1000
+PDF_TEXT_ENCODING = 'utf-8'
+PDF_IMAGE_DPI = 300
+PDF_TABLE_DETECTION_METHOD = 'stream'  # stream, lattice, or both
+
+# Web Scraping
+WEB_SCRAPING_METHODS = ['requests', 'selenium', 'scrapy', 'beautifulsoup']
+WEB_SCRAPING_TIMEOUT = 30  # seconds
+WEB_SCRAPING_RETRY_ATTEMPTS = 3
+WEB_SCRAPING_DELAY = 1  # seconds between requests
+WEB_SCRAPING_USER_AGENT = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
+WEB_SCRAPING_MAX_PAGES = 1000
+WEB_SCRAPING_EXCLUDE_PATTERNS = [
+    r'\.(css|js|png|jpg|jpeg|gif|svg|ico|woff|woff2|ttf|eot)$',
+    r'/admin/',
+    r'/login/',
+    r'/logout/',
+    r'/api/',
+    r'/ajax/'
+]
+
+# Document Processing
+DOCUMENT_PROCESSING_METHODS = ['ocr', 'text_extraction', 'layout_analysis', 'table_extraction']
+OCR_LANGUAGES = ['en', 'es', 'fr', 'de', 'it', 'pt', 'ru', 'zh', 'ja', 'ko']
+OCR_CONFIDENCE_THRESHOLD = 0.7
+DOCUMENT_MAX_SIZE_MB = 50
+
+# Content Extraction
+CONTENT_EXTRACTION_METHODS = {
+    'text': ['raw_text', 'cleaned_text', 'structured_text'],
+    'tables': ['pandas_dataframe', 'html_table', 'csv_export'],
+    'images': ['raw_images', 'processed_images', 'image_metadata'],
+    'metadata': ['document_info', 'author_info', 'creation_date', 'modification_date']
+}
+
 DEFAULT_IMAGE_SIZE: Tuple[int, int] = (224, 224)
 DEFAULT_TEXT_MAX_LENGTH = 512
 DEFAULT_AUDIO_SAMPLE_RATE = 16000
