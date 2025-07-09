@@ -31,6 +31,13 @@ except ImportError:
     PSUTIL_AVAILABLE = False
 
 try:
+    from sklearn.linear_model import LinearRegression
+    from sklearn.preprocessing import StandardScaler
+    SKLEARN_AVAILABLE = True
+except ImportError:
+    SKLEARN_AVAILABLE = False
+
+try:
     from monitoring.metrics_collector import AdvancedMetricsCollector as MetricsCollector
 except ImportError:
     from monitoring.metrics_collector import MetricsCollector
@@ -89,12 +96,31 @@ class AdvancedFederatedLearningDashboard:
             'alert_history': []
         }
         
+        # Enhanced performance tracking
+        self.performance_predictions = {
+            'loss_trend': None,
+            'convergence_estimate': None,
+            'resource_usage_forecast': None,
+            'anomaly_scores': []
+        }
+        
+        # Client analytics
+        self.client_analytics = {
+            'performance_ranking': [],
+            'anomaly_detection': {},
+            'contribution_metrics': {},
+            'network_latency': {}
+        }
+        
         # Alert management
         self.active_alerts = []
         self.alert_history = []
         
         # System monitoring
         self.system_metrics = {}
+        
+        # Predictive models
+        self.predictive_models = {}
         
         # Start background monitoring
         self._start_background_monitoring()
@@ -547,6 +573,78 @@ class AdvancedFederatedLearningDashboard:
                 ])
             ], className="mb-4"),
             
+            # Predictive Analytics
+            dbc.Row([
+                dbc.Col([
+                    dbc.Card([
+                        dbc.CardHeader([
+                            html.I(className="fas fa-crystal-ball me-2"),
+                            "Predictive Analytics"
+                        ]),
+                        dbc.CardBody([
+                            dbc.Row([
+                                dbc.Col([
+                                    html.Div([
+                                        html.H6("Loss Trend Prediction"),
+                                        html.H4(id="loss-prediction", children="--", className="text-info"),
+                                        html.Small("Next 5 rounds", className="text-muted")
+                                    ])
+                                ], width=3),
+                                dbc.Col([
+                                    html.Div([
+                                        html.H6("Convergence Estimate"),
+                                        html.H4(id="convergence-estimate", children="--", className="text-success"),
+                                        html.Small("Rounds to convergence", className="text-muted")
+                                    ])
+                                ], width=3),
+                                dbc.Col([
+                                    html.Div([
+                                        html.H6("Resource Forecast"),
+                                        html.H4(id="resource-forecast", children="--", className="text-warning"),
+                                        html.Small("Peak usage prediction", className="text-muted")
+                                    ])
+                                ], width=3),
+                                dbc.Col([
+                                    html.Div([
+                                        html.H6("Anomaly Score"),
+                                        html.H4(id="anomaly-score", children="--", className="text-danger"),
+                                        html.Small("Current system health", className="text-muted")
+                                    ])
+                                ], width=3)
+                            ])
+                        ])
+                    ])
+                ])
+            ], className="mb-4"),
+            
+            # Client Performance Analytics
+            dbc.Row([
+                dbc.Col([
+                    dbc.Card([
+                        dbc.CardHeader([
+                            html.I(className="fas fa-users me-2"),
+                            "Client Performance Analytics"
+                        ]),
+                        dbc.CardBody([
+                            dbc.Row([
+                                dbc.Col([
+                                    html.Div([
+                                        html.H6("Top Performers"),
+                                        html.Div(id="top-performers", children="Loading...")
+                                    ])
+                                ], width=6),
+                                dbc.Col([
+                                    html.Div([
+                                        html.H6("Anomaly Detection"),
+                                        html.Div(id="anomaly-detection", children="Loading...")
+                                    ])
+                                ], width=6)
+                            ])
+                        ])
+                    ])
+                ])
+            ], className="mb-4"),
+            
             # Analytics Charts
             dbc.Row([
                 dbc.Col([
@@ -808,6 +906,116 @@ class AdvancedFederatedLearningDashboard:
             except Exception as e:
                 logger.error(f"Error updating alert banner: {e}")
                 return []
+        
+        # Predictive analytics callbacks
+        @self.app.callback(
+            [Output("loss-prediction", "children"),
+             Output("convergence-estimate", "children"),
+             Output("resource-forecast", "children"),
+             Output("anomaly-score", "children")],
+            [Input("interval-component", "n_intervals")]
+        )
+        def update_predictive_analytics(n):
+            """Update predictive analytics."""
+            try:
+                # Get recent loss data
+                loss_metrics = self.metrics_collector.get_metric("federated.round.loss")
+                
+                if not loss_metrics or len(loss_metrics) < 5:
+                    return "--", "--", "--", "--"
+                
+                # Calculate loss trend prediction
+                recent_losses = [m.value for m in loss_metrics[-10:]]
+                if len(recent_losses) >= 5:
+                    trend = self._calculate_loss_trend(recent_losses)
+                    loss_prediction = f"{trend:.4f}"
+                else:
+                    loss_prediction = "--"
+                
+                # Calculate convergence estimate
+                convergence_estimate = self._estimate_convergence(recent_losses)
+                
+                # Calculate resource forecast
+                if PSUTIL_AVAILABLE:
+                    cpu_history = [self.system_metrics.get('cpu_percent', 0)]
+                    resource_forecast = f"{max(cpu_history) * 1.2:.1f}%"
+                else:
+                    resource_forecast = "--"
+                
+                # Calculate anomaly score
+                anomaly_score = self._calculate_anomaly_score(recent_losses)
+                
+                return loss_prediction, convergence_estimate, resource_forecast, anomaly_score
+                
+            except Exception as e:
+                logger.error(f"Error updating predictive analytics: {e}")
+                return "--", "--", "--", "--"
+        
+        # Client performance analytics callbacks
+        @self.app.callback(
+            [Output("top-performers", "children"),
+             Output("anomaly-detection", "children")],
+            [Input("interval-component", "n_intervals")]
+        )
+        def update_client_analytics(n):
+            """Update client performance analytics."""
+            try:
+                # Get client metrics
+                client_metrics = self.metrics_collector.client_metrics
+                
+                if not client_metrics:
+                    return "No client data", "No anomalies detected"
+                
+                # Calculate top performers
+                client_scores = {}
+                for client_id, metrics in client_metrics.items():
+                    if metrics:
+                        # Calculate average loss for this client
+                        avg_loss = sum(m.get('loss', 0) for m in metrics[-10:]) / len(metrics[-10:])
+                        client_scores[client_id] = avg_loss
+                
+                # Sort by performance (lower loss is better)
+                top_performers = sorted(client_scores.items(), key=lambda x: x[1])[:3]
+                
+                top_performers_html = []
+                for i, (client_id, score) in enumerate(top_performers):
+                    rank_icon = ["🥇", "🥈", "🥉"][i] if i < 3 else "🏅"
+                    top_performers_html.append(
+                        html.Div([
+                            html.Span(rank_icon, className="me-2"),
+                            html.Strong(f"Client {client_id}"),
+                            html.Span(f": {score:.4f}", className="text-muted ms-2")
+                        ], className="mb-1")
+                    )
+                
+                # Anomaly detection
+                anomalies = []
+                for client_id, metrics in client_metrics.items():
+                    if len(metrics) >= 5:
+                        recent_losses = [m.get('loss', 0) for m in metrics[-5:]]
+                        if self._detect_client_anomaly(recent_losses):
+                            anomalies.append(client_id)
+                
+                if anomalies:
+                    anomaly_html = [
+                        html.Div([
+                            html.I(className="fas fa-exclamation-triangle text-warning me-2"),
+                            f"Anomalies detected in clients: {', '.join(anomalies)}"
+                        ])
+                    ]
+                else:
+                    anomaly_html = [
+                        html.Div([
+                            html.I(className="fas fa-check-circle text-success me-2"),
+                            "No anomalies detected"
+                        ])
+                    ]
+                
+                return top_performers_html, anomaly_html
+                
+            except Exception as e:
+                logger.error(f"Error updating client analytics: {e}")
+                return "Error loading data", "Error detecting anomalies"
     
     def _create_empty_figure(self, message: str):
         """Create empty figure with message."""
@@ -826,6 +1034,104 @@ class AdvancedFederatedLearningDashboard:
             }
         }
     
+    def _calculate_loss_trend(self, losses: List[float]) -> float:
+        """Calculate predicted loss trend for next 5 rounds."""
+        try:
+            if len(losses) < 3:
+                return losses[-1] if losses else 0.0
+            
+            # Simple linear regression for trend prediction
+            x = list(range(len(losses)))
+            y = losses
+            
+            # Calculate trend using simple linear regression
+            n = len(x)
+            sum_x = sum(x)
+            sum_y = sum(y)
+            sum_xy = sum(x[i] * y[i] for i in range(n))
+            sum_x2 = sum(x[i] ** 2 for i in range(n))
+            
+            # Calculate slope
+            slope = (n * sum_xy - sum_x * sum_y) / (n * sum_x2 - sum_x ** 2)
+            
+            # Predict next 5 rounds
+            current_loss = losses[-1]
+            predicted_loss = current_loss + (slope * 5)
+            
+            return max(0.0, predicted_loss)  # Loss cannot be negative
+            
+        except Exception as e:
+            logger.error(f"Error calculating loss trend: {e}")
+            return losses[-1] if losses else 0.0
+    
+    def _estimate_convergence(self, losses: List[float]) -> str:
+        """Estimate rounds to convergence."""
+        try:
+            if len(losses) < 5:
+                return "--"
+            
+            # Calculate loss improvement rate
+            recent_losses = losses[-5:]
+            improvement_rate = (recent_losses[0] - recent_losses[-1]) / len(recent_losses)
+            
+            if improvement_rate <= 0.001:  # Very small improvement
+                return "Converged"
+            elif improvement_rate <= 0.01:  # Small improvement
+                return "5-10 rounds"
+            elif improvement_rate <= 0.05:  # Moderate improvement
+                return "10-20 rounds"
+            else:  # Large improvement
+                return "20+ rounds"
+                
+        except Exception as e:
+            logger.error(f"Error estimating convergence: {e}")
+            return "--"
+    
+    def _calculate_anomaly_score(self, losses: List[float]) -> str:
+        """Calculate anomaly score based on loss patterns."""
+        try:
+            if len(losses) < 3:
+                return "0.0"
+            
+            # Calculate statistical measures
+            mean_loss = sum(losses) / len(losses)
+            variance = sum((loss - mean_loss) ** 2 for loss in losses) / len(losses)
+            std_dev = variance ** 0.5
+            
+            # Calculate anomaly score based on recent loss deviation
+            recent_loss = losses[-1]
+            z_score = abs(recent_loss - mean_loss) / std_dev if std_dev > 0 else 0
+            
+            # Normalize to 0-1 scale
+            anomaly_score = min(1.0, z_score / 3.0)  # 3 sigma rule
+            
+            return f"{anomaly_score:.2f}"
+            
+        except Exception as e:
+            logger.error(f"Error calculating anomaly score: {e}")
+            return "0.0"
+    
+    def _detect_client_anomaly(self, losses: List[float]) -> bool:
+        """Detect anomalies in client loss patterns."""
+        try:
+            if len(losses) < 3:
+                return False
+            
+            # Calculate statistical measures
+            mean_loss = sum(losses) / len(losses)
+            variance = sum((loss - mean_loss) ** 2 for loss in losses) / len(losses)
+            std_dev = variance ** 0.5
+            
+            # Check for anomalies (losses outside 2 standard deviations)
+            recent_loss = losses[-1]
+            z_score = abs(recent_loss - mean_loss) / std_dev if std_dev > 0 else 0
+            
+            return z_score > 2.0  # Anomaly if more than 2 standard deviations
+            
+        except Exception as e:
+            logger.error(f"Error detecting client anomaly: {e}")
+            return False
+    
     def _start_background_monitoring(self):
         """Start background monitoring tasks."""
         def background_monitor():
@@ -839,6 +1145,12 @@ class AdvancedFederatedLearningDashboard:
                             'disk_percent': psutil.disk_usage('/').percent,
                             'network_io': psutil.net_io_counters()._asdict()
                         }
+                    
+                    # Update predictive analytics
+                    self._update_predictive_analytics()
+                    
+                    # Update client analytics
+                    self._update_client_analytics()
                     
                     # Update alert history
                     if self.enable_alerts and self.metrics_collector.alert_manager:
@@ -861,6 +1173,101 @@ class AdvancedFederatedLearningDashboard:
         monitor_thread = threading.Thread(target=background_monitor, daemon=True)
         monitor_thread.start()
         logger.info("Background monitoring started")
+    
+    def _update_predictive_analytics(self):
+        """Update predictive analytics in background."""
+        try:
+            # Get recent loss data
+            loss_metrics = self.metrics_collector.get_metric("federated.round.loss")
+            
+            if loss_metrics and len(loss_metrics) >= 5:
+                recent_losses = [m.value for m in loss_metrics[-10:]]
+                
+                # Update loss trend prediction
+                self.performance_predictions['loss_trend'] = self._calculate_loss_trend(recent_losses)
+                
+                # Update convergence estimate
+                self.performance_predictions['convergence_estimate'] = self._estimate_convergence(recent_losses)
+                
+                # Update anomaly scores
+                self.performance_predictions['anomaly_scores'].append({
+                    'timestamp': datetime.now(),
+                    'score': float(self._calculate_anomaly_score(recent_losses))
+                })
+                
+                # Keep only recent anomaly scores
+                if len(self.performance_predictions['anomaly_scores']) > 50:
+                    self.performance_predictions['anomaly_scores'] = self.performance_predictions['anomaly_scores'][-50:]
+                
+        except Exception as e:
+            logger.error(f"Error updating predictive analytics: {e}")
+    
+    def _update_client_analytics(self):
+        """Update client analytics in background."""
+        try:
+            client_metrics = self.metrics_collector.client_metrics
+            
+            if not client_metrics:
+                return
+            
+            # Update client performance ranking
+            client_scores = {}
+            for client_id, metrics in client_metrics.items():
+                if metrics:
+                    # Calculate performance score based on recent metrics
+                    recent_metrics = metrics[-10:] if len(metrics) >= 10 else metrics
+                    avg_loss = sum(m.get('loss', 0) for m in recent_metrics) / len(recent_metrics)
+                    client_scores[client_id] = avg_loss
+            
+            # Sort by performance (lower loss is better)
+            self.client_analytics['performance_ranking'] = sorted(
+                client_scores.items(), 
+                key=lambda x: x[1]
+            )
+            
+            # Update anomaly detection
+            for client_id, metrics in client_metrics.items():
+                if len(metrics) >= 5:
+                    recent_losses = [m.get('loss', 0) for m in metrics[-5:]]
+                    is_anomalous = self._detect_client_anomaly(recent_losses)
+                    self.client_analytics['anomaly_detection'][client_id] = is_anomalous
+            
+        except Exception as e:
+            logger.error(f"Error updating client analytics: {e}")
+    
+    def get_current_metrics(self) -> Dict[str, Any]:
+        """Get current metrics for dashboard updates."""
+        try:
+            current_metrics = {
+                'total_rounds': self.metrics_collector.performance_metrics.get('total_rounds', 0),
+                'active_clients': len(self.metrics_collector.client_metrics),
+                'avg_loss': 0.0,
+                'privacy_budget_consumed': self.metrics_collector.performance_metrics.get('privacy_budget_consumed', 0.0),
+                'system_metrics': self.system_metrics,
+                'predictive_analytics': self.performance_predictions,
+                'client_analytics': self.client_analytics
+            }
+            
+            # Calculate average loss from recent metrics
+            recent_metrics = self.metrics_collector.get_recent_metrics(limit=50)
+            if recent_metrics:
+                losses = [m.get('loss', 0) for m in recent_metrics if 'loss' in m]
+                if losses:
+                    current_metrics['avg_loss'] = sum(losses) / len(losses)
+            
+            return current_metrics
+            
+        except Exception as e:
+            logger.error(f"Error getting current metrics: {e}")
+            return {
+                'total_rounds': 0,
+                'active_clients': 0,
+                'avg_loss': 0.0,
+                'privacy_budget_consumed': 0.0,
+                'system_metrics': {},
+                'predictive_analytics': {},
+                'client_analytics': {}
+            }
     
     def start(self, debug: bool = False, host: str = "0.0.0.0"):
         """Start the dashboard server.
